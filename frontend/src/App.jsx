@@ -213,10 +213,10 @@ function App() {
       const processed = upload.mode === 'local'
         ? localUploadResult
         : await api.processFile({
-            key: upload.key,
-            originalName: selectedFile.name,
-            contentType: selectedFile.type || guessContentType(selectedFile.name)
-          });
+          key: upload.key,
+          originalName: selectedFile.name,
+          contentType: selectedFile.type || guessContentType(selectedFile.name)
+        });
 
       if (processed.textSupported && processed.extractedText) {
         setNotes((current) => {
@@ -288,14 +288,14 @@ function App() {
     setHintVisible(false);
   }
 
-    return (
+  return (
     <div className="dashboard-layout">
       <aside className="sidebar">
         <div className="sidebar-brand">
           <Sparkles size={24} className="brand-icon" />
-          <h1>CloudMentor</h1>
+          <h1>AI Mentor</h1>
         </div>
-        
+
         <div className="hero-pipeline" aria-label="Backend status">
           <div className="status-card">
             <BrainCircuit size={32} />
@@ -330,7 +330,7 @@ function App() {
             <p className="muted">No history yet. Generate or upload something first.</p>
           )}
         </div>
-        
+
         <div className="glass-card mini-panel">
           <div className="panel-header compact">
             <div>
@@ -749,12 +749,12 @@ function Metric({ label, value }) {
 function getQuizQuestions(resultData) {
   return Array.isArray(resultData?.questions)
     ? resultData.questions
-        .map((question) => ({
-          ...question,
-          options: Array.isArray(question.options) ? question.options : [],
-          answerIndex: Number(question.answerIndex)
-        }))
-        .filter((question) => question.question && question.options.length >= 2 && Number.isInteger(question.answerIndex))
+      .map((question) => ({
+        ...question,
+        options: Array.isArray(question.options) ? question.options : [],
+        answerIndex: Number(question.answerIndex)
+      }))
+      .filter((question) => question.question && question.options.length >= 2 && Number.isInteger(question.answerIndex))
     : [];
 }
 
