@@ -288,237 +288,49 @@ function App() {
     setHintVisible(false);
   }
 
-  return (
-    <main className="app-shell">
-      <section className="hero">
-        <div className="hero-panel">
-          <div className="eyebrow">
-            <Sparkles size={16} /> Serverless AI classroom pipeline
-          </div>
-
+    return (
+    <div className="dashboard-layout">
+      <aside className="sidebar">
+        <div className="sidebar-brand">
+          <Sparkles size={24} className="brand-icon" />
           <h1>CloudMentor</h1>
-          <p>
-            A modern React learning assistant powered by AWS Lambda, S3, DynamoDB, and OpenAI.
-            Students can paste notes, upload study files, generate interactive quizzes, flip flashcards,
-            and build exact day-by-day study plans in one cloud-native project.
-          </p>
-
-          <div className="pipeline-badge" aria-label="CloudMentor architecture path">
-            <span>React</span>
-            <span>→</span>
-            <span>API Gateway</span>
-            <span>→</span>
-            <span>Lambda</span>
-            <span>→</span>
-            <span>S3</span>
-            <span>→</span>
-            <span>OpenAI</span>
-          </div>
-
-          <div className="hero-actions">
-            <button type="button" className="primary-button" onClick={handleGenerate} disabled={loading}>
-              {loading ? <Loader2 className="spin" size={18} /> : <Wand2 size={18} />}
-              {loading ? 'Generating...' : `Run ${selectedTask.label}`}
-            </button>
-            <button type="button" className="ghost-button" onClick={checkHealth}>
-              Check Backend
-            </button>
-          </div>
         </div>
-
-        <div className="hero-pipeline" aria-label="Backend status and architecture">
+        
+        <div className="hero-pipeline" aria-label="Backend status">
           <div className="status-card">
-            <BrainCircuit size={42} />
+            <BrainCircuit size={32} />
             <div>
               <span className={`status-pill ${status === 'Connected' ? 'good' : 'warn'}`}>{status}</span>
-              <small>Storage mode: {storageMode}</small>
-              <small>AI mode: {aiMode}</small>
+              <small>Storage: {storageMode}</small>
             </div>
-          </div>
-
-          <div className="pipeline-map">
-            {pipelineSteps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div className="pipeline-step" key={step.label}>
-                  <div className="step-node">
-                    <Icon size={20} />
-                  </div>
-                  <strong>{step.label}</strong>
-                  <span>{step.detail}</span>
-                  {index < pipelineSteps.length - 1 && <i aria-hidden="true">→</i>}
-                </div>
-              );
-            })}
           </div>
         </div>
-      </section>
 
-      <section className="metrics-grid four">
-        <Metric label="Current task" value={selectedTask.label} />
-        <Metric label="Input size" value={`${wordCount} words`} />
-        <Metric label="Difficulty" value={level} />
-        <Metric label="AI mode" value={aiMode} />
-      </section>
-
-      {error && (
-        <section className="error-box" role="alert">
-          <strong>Issue:</strong> {error}
-        </section>
-      )}
-
-      <section className="workspace">
-        <div className="panel glass-card">
-          <div className="panel-header">
+        <div className="glass-card mini-panel history-panel">
+          <div className="panel-header compact">
             <div>
-              <span className="section-kicker">Input</span>
-              <h2>Choose an AI action</h2>
+              <span className="section-kicker">History</span>
+              <h2>Recent AI outputs</h2>
             </div>
-            <SelectedIcon size={24} />
+            <History size={22} />
           </div>
 
-          <div className="task-grid" role="radiogroup" aria-label="AI task selector">
-            {Object.entries(taskMap).map(([key, item]) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  type="button"
-                  key={key}
-                  className={`task-card ${task === key ? 'active' : ''}`}
-                  onClick={() => setTask(key)}
-                >
-                  <Icon size={20} />
-                  <span>{item.label}</span>
-                  <small>{item.description}</small>
+          {historyLoading ? (
+            <p className="muted">Loading history...</p>
+          ) : history.length ? (
+            <div className="history-list">
+              {history.map((item) => (
+                <button type="button" key={item.id} onClick={() => openHistoryItem(item)}>
+                  <strong>{item.title}</strong>
+                  <span>{new Date(item.createdAt).toLocaleString()}</span>
                 </button>
-              );
-            })}
-          </div>
-
-          <label className="field-label" htmlFor="notes">
-            Notes or topic
-          </label>
-          <textarea
-            id="notes"
-            value={notes}
-            onChange={(event) => setNotes(event.target.value)}
-            placeholder="Paste class notes, a concept, or a lesson topic here..."
-          />
-
-          <div className="upload-card">
-            <div className="upload-heading">
-              <UploadCloud size={22} />
-              <div>
-                <strong>Upload study material</strong>
-                <span>Stored in S3 after deployment. SAM local uses local file storage.</span>
-              </div>
+              ))}
             </div>
-
-            <label className="file-picker" htmlFor="study-file">
-              <FileUp size={20} />
-              <span>{selectedFile ? selectedFile.name : 'Choose .txt, .md, .csv, .json, .yaml, .log, PDF, or DOCX'}</span>
-              <input
-                id="study-file"
-                type="file"
-                accept=".txt,.md,.markdown,.csv,.json,.yaml,.yml,.log,.pdf,.doc,.docx"
-                onChange={handleFileChange}
-              />
-            </label>
-
-            <div className="upload-actions">
-              <button type="button" className="ghost-button small" onClick={handleUploadFile} disabled={uploading || !selectedFile}>
-                {uploading ? <Loader2 className="spin" size={17} /> : <ShieldCheck size={17} />}
-                {uploading ? 'Uploading...' : 'Upload & Load Text'}
-              </button>
-              {selectedFile && <span className="file-size">{formatBytes(selectedFile.size)}</span>}
-            </div>
-
-            <p className="upload-note">{uploadInfo}</p>
-          </div>
-
-          <div className="form-row">
-            <label>
-              Level
-              <select value={level} onChange={(event) => setLevel(event.target.value)}>
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
-              </select>
-            </label>
-
-            <label>
-              Study days
-              <input
-                type="number"
-                min="1"
-                max="30"
-                value={days}
-                onChange={(event) => setDays(event.target.value)}
-              />
-            </label>
-          </div>
-
-          <label className="field-label" htmlFor="exam-date">
-            Exam date, optional
-          </label>
-          <input
-            id="exam-date"
-            type="date"
-            value={examDate}
-            onChange={(event) => setExamDate(event.target.value)}
-          />
-
-          <button type="button" className="full-button" onClick={handleGenerate} disabled={loading || !notes.trim()}>
-            {loading ? <Loader2 className="spin" size={18} /> : <Sparkles size={18} />}
-            Generate with CloudMentor
-          </button>
+          ) : (
+            <p className="muted">No history yet. Generate or upload something first.</p>
+          )}
         </div>
-
-        <div className="panel glass-card result-panel">
-          <div className="panel-header">
-            <div>
-              <span className="section-kicker">Output</span>
-              <h2>{resultTitle}</h2>
-            </div>
-            <button type="button" className="icon-button" onClick={handleCopy} disabled={!result} aria-label="Copy result">
-              {copied ? <CheckCircle2 size={20} /> : <Copy size={20} />}
-            </button>
-          </div>
-
-          <div className="result-box">
-            {loading ? (
-              <div className="loading-state">
-                <Loader2 className="spin" size={28} />
-                <p>Calling Lambda and asking the CloudMentor brain...</p>
-              </div>
-            ) : result ? (
-              <ResultRenderer
-                task={task}
-                result={result}
-                resultData={resultData}
-                quizAnswers={quizAnswers}
-                quizScore={quizScore}
-                onChooseAnswer={chooseQuizAnswer}
-                onResetQuiz={resetQuiz}
-                flashcardIndex={flashcardIndex}
-                flashcardFlipped={flashcardFlipped}
-                hintVisible={hintVisible}
-                setFlashcardFlipped={setFlashcardFlipped}
-                setHintVisible={setHintVisible}
-                nextFlashcard={nextFlashcard}
-                previousFlashcard={previousFlashcard}
-              />
-            ) : (
-              <div className="empty-state">
-                <BrainCircuit size={44} />
-                <p>Paste notes or upload a text file, choose a task, and generate your first AI learning asset.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      <section className="bottom-grid">
+        
         <div className="glass-card mini-panel">
           <div className="panel-header compact">
             <div>
@@ -549,33 +361,190 @@ function App() {
             <button type="button" className="ghost-button small" onClick={handleSaveProgress}>Save Progress</button>
           </div>
         </div>
+      </aside>
 
-        <div className="glass-card mini-panel history-panel">
-          <div className="panel-header compact">
-            <div>
-              <span className="section-kicker">History</span>
-              <h2>Recent AI outputs</h2>
+      <main className="main-content">
+        <header className="top-bar">
+          <div className="intro-text">
+            <h2>Welcome to your AI Learning Assistant</h2>
+            <p>Paste notes, upload study files, generate quizzes, flip flashcards, and build exact study plans.</p>
+          </div>
+          <div className="hero-actions">
+            <button type="button" className="primary-button" onClick={handleGenerate} disabled={loading}>
+              {loading ? <Loader2 className="spin" size={18} /> : <Wand2 size={18} />}
+              {loading ? 'Generating...' : `Run ${selectedTask.label}`}
+            </button>
+            <button type="button" className="ghost-button" onClick={checkHealth}>
+              Check Backend
+            </button>
+          </div>
+        </header>
+
+        <section className="metrics-grid four">
+          <Metric label="Current task" value={selectedTask.label} />
+          <Metric label="Input size" value={`${wordCount} words`} />
+          <Metric label="Difficulty" value={level} />
+          <Metric label="AI mode" value={aiMode} />
+        </section>
+
+        {error && (
+          <section className="error-box" role="alert">
+            <strong>Issue:</strong> {error}
+          </section>
+        )}
+
+        <section className="workspace">
+          <div className="panel glass-card">
+            <div className="panel-header">
+              <div>
+                <span className="section-kicker">Input</span>
+                <h2>Choose an AI action</h2>
+              </div>
+              <SelectedIcon size={24} />
             </div>
-            <History size={22} />
+
+            <div className="task-grid" role="radiogroup" aria-label="AI task selector">
+              {Object.entries(taskMap).map(([key, item]) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    type="button"
+                    key={key}
+                    className={`task-card ${task === key ? 'active' : ''}`}
+                    onClick={() => setTask(key)}
+                  >
+                    <Icon size={20} />
+                    <span>{item.label}</span>
+                    <small>{item.description}</small>
+                  </button>
+                );
+              })}
+            </div>
+
+            <label className="field-label" htmlFor="notes">
+              Notes or topic
+            </label>
+            <textarea
+              id="notes"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Paste class notes, a concept, or a lesson topic here..."
+            />
+
+            <div className="upload-card">
+              <div className="upload-heading">
+                <UploadCloud size={22} />
+                <div>
+                  <strong>Upload study material</strong>
+                  <span>Stored securely for AI processing.</span>
+                </div>
+              </div>
+
+              <label className="file-picker" htmlFor="study-file">
+                <FileUp size={20} />
+                <span>{selectedFile ? selectedFile.name : 'Choose .txt, .md, .csv, PDF, or DOCX'}</span>
+                <input
+                  id="study-file"
+                  type="file"
+                  accept=".txt,.md,.markdown,.csv,.json,.yaml,.yml,.log,.pdf,.doc,.docx"
+                  onChange={handleFileChange}
+                />
+              </label>
+
+              <div className="upload-actions">
+                <button type="button" className="ghost-button small" onClick={handleUploadFile} disabled={uploading || !selectedFile}>
+                  {uploading ? <Loader2 className="spin" size={17} /> : <ShieldCheck size={17} />}
+                  {uploading ? 'Uploading...' : 'Upload & Load Text'}
+                </button>
+                {selectedFile && <span className="file-size">{formatBytes(selectedFile.size)}</span>}
+              </div>
+
+              <p className="upload-note">{uploadInfo}</p>
+            </div>
+
+            <div className="form-row">
+              <label>
+                Level
+                <select value={level} onChange={(event) => setLevel(event.target.value)}>
+                  <option value="beginner">Beginner</option>
+                  <option value="intermediate">Intermediate</option>
+                  <option value="advanced">Advanced</option>
+                </select>
+              </label>
+
+              <label>
+                Study days
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={days}
+                  onChange={(event) => setDays(event.target.value)}
+                />
+              </label>
+            </div>
+
+            <label className="field-label" htmlFor="exam-date">
+              Exam date, optional
+            </label>
+            <input
+              id="exam-date"
+              type="date"
+              value={examDate}
+              onChange={(event) => setExamDate(event.target.value)}
+            />
+
+            <button type="button" className="full-button" onClick={handleGenerate} disabled={loading || !notes.trim()}>
+              {loading ? <Loader2 className="spin" size={18} /> : <Sparkles size={18} />}
+              Generate with CloudMentor
+            </button>
           </div>
 
-          {historyLoading ? (
-            <p className="muted">Loading history...</p>
-          ) : history.length ? (
-            <div className="history-list">
-              {history.map((item) => (
-                <button type="button" key={item.id} onClick={() => openHistoryItem(item)}>
-                  <strong>{item.title}</strong>
-                  <span>{new Date(item.createdAt).toLocaleString()}</span>
-                </button>
-              ))}
+          <div className="panel glass-card result-panel">
+            <div className="panel-header">
+              <div>
+                <span className="section-kicker">Output</span>
+                <h2>{resultTitle}</h2>
+              </div>
+              <button type="button" className="icon-button" onClick={handleCopy} disabled={!result} aria-label="Copy result">
+                {copied ? <CheckCircle2 size={20} /> : <Copy size={20} />}
+              </button>
             </div>
-          ) : (
-            <p className="muted">No history yet. Generate or upload something first.</p>
-          )}
-        </div>
-      </section>
-    </main>
+
+            <div className="result-box">
+              {loading ? (
+                <div className="loading-state">
+                  <Loader2 className="spin" size={28} />
+                  <p>Calling AI brain...</p>
+                </div>
+              ) : result ? (
+                <ResultRenderer
+                  task={task}
+                  result={result}
+                  resultData={resultData}
+                  quizAnswers={quizAnswers}
+                  quizScore={quizScore}
+                  onChooseAnswer={chooseQuizAnswer}
+                  onResetQuiz={resetQuiz}
+                  flashcardIndex={flashcardIndex}
+                  flashcardFlipped={flashcardFlipped}
+                  hintVisible={hintVisible}
+                  setFlashcardFlipped={setFlashcardFlipped}
+                  setHintVisible={setHintVisible}
+                  nextFlashcard={nextFlashcard}
+                  previousFlashcard={previousFlashcard}
+                />
+              ) : (
+                <div className="empty-state">
+                  <BrainCircuit size={44} />
+                  <p>Paste notes or upload a text file, choose a task, and generate your first AI learning asset.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
   );
 }
 
