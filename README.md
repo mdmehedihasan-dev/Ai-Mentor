@@ -1,4 +1,4 @@
-# CloudMentor Prod
+# AIMentor Prod
 
 CloudMentor is a teaching-friendly AI learning assistant built with React, AWS Lambda, API Gateway, S3, DynamoDB, CloudWatch, and GitHub Actions CI/CD.
 
